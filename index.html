@@ -52,11 +52,13 @@
                         "rating": business.rating,
                         "review_count": business.review_count
                     });
-                });
-                table.appendRows(tableData);
-                doneCallback();
-            });
-        };
+        });
+        table.appendRows(tableData);
+        setTimeout(function() {
+            doneCallback();
+        }, 3000); // Delay the closing of the window by 3 seconds
+    });
+};
         tableau.registerConnector(myConnector);
     </script>
 </head>
