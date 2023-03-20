@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Yelp Fusion API Connector</title>
+    <script src="https://connectors.tableau.com/libs/tableauwdc-2.2.latest.js"></script>
+    <script>
+        // Define the connector
+        var myConnector = tableau.makeConnector();
+        myConnector.init = function(initCallback) {
+            // Initialize the connector
+            tableau.authType = tableau.authTypeEnum.custom;
+            initCallback();
+        };
+        myConnector.getSchema = function(schemaCallback) {
+            // Define the schema of the data
+            var cols = [
+                { id: "name", alias: "Name", dataType: tableau.dataTypeEnum.string },
+                { id: "address", alias: "Address", dataType: tableau.dataTypeEnum.string },
+                { id: "phone", alias: "Phone", dataType: tableau.dataTypeEnum.string },
+                { id: "rating", alias: "Rating", dataType: tableau.dataTypeEnum.float },
+                { id: "review_count", alias: "Review Count", dataType: tableau.dataTypeEnum.int }
+            ];
+            var tableSchema = {
+                id: "yelpData",
+                alias: "Yelp Data",
+                columns: cols
+            };
+            schemaCallback([tableSchema]);
+        };
+        myConnector.getData = function(table, doneCallback) {
+            // Get the data from the API
+            var formData = {
+                location: "Los Angeles",
+                limit: 5
+            };
+            var xhr = $.ajax({
+                url: "https://api.yelp.com/v3/businesses/search",
+                type: "GET",
+                headers: {
+                    "Authorization": "Bearer -fkw3L9Bm3smMILDFqdwIbCXdTrz16MeyDHn6KauqTBeSIG1bujpZOK_0OIcMQ6zMl9p-E_uzpJOKmB_Od2jCXQPJQhO9u93L2KCNtC5Pjn2N_K9SWdqYKGeTL4XZHYx"
+                },
+                data: formData
+            });
+            xhr.done(function(response) {
+                // Parse the response and pass it to Tableau
+                var tableData = [];
+                $.each(response.businesses, function(i, business) {
+                    tableData.push({
+                        "name": business.name,
+                        "address": business.location.address1,
+                        "phone": business.phone,
+                        "rating": business.rating,
+                        "review_count": business.review_count
+                    });
+                });
+                table.appendRows(tableData);
+                doneCallback();
+            });
+        };
+        tableau.registerConnector(myConnector);
+    </script>
+</head>
+<body>
+    <h1>Yelp Fusion API Connector</h1>
+    <button id="submitButton">Submit</button>
+    <script>
+        $(document).ready(function() {
+            // Initialize the connector and submit the form
+            $('#submitButton').click(function() {
+                tableau.connectionName = "Yelp Data";
+                tableau.submit();
+            });
+            tableau.init();
+        });
+    </script>
+</body>
+</html>
